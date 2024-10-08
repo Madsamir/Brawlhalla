@@ -4,6 +4,8 @@ let characterImg; // Variable for the character image
 let canFallThrough = false; // State to track if the player is allowed to fall through a platform
 let upperPlatformWidth = 150; // Adjustable width for the upper platform
 let mirroredPlatformWidth = 150;
+let levelWidth = 1200; // Width of the entire level
+let levelHeight = 10; // Height of the level
 // Define keys state
 let keys = {};
 
@@ -13,42 +15,43 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(2000, 1000);
   
   // Define the character
   character = {
-    x: 100,
+    x: 500,
     y: 300,
     width: 40,
     height: 40,
     speed: 5,
-    gravity: 0.5,
+    gravity: 0.6,
     velocityY: 0,
     jumping: false,
-    jumpForce: -20
+    jumpForce: -15
   };
+    
+  platforms.push({ x: 500, y: 450, width: 900, height: 150 }); // Bottom platform
   
-  platforms.push({ x: 0, y: 400, width: width, height: 20 }); // Bottom platform
   
-  platforms.push({ x: 350, y: 200, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
+  platforms.push({ x: 650, y: 270, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
   
   // Add a new parallel platform on the opposite side with adjustable width
-  platforms.push({ x: width - 350 - mirroredPlatformWidth, y: 200, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+  platforms.push({ x: width - 750 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
   
   
-  platforms.push({x: 600, y: 75, width: upperPlatformWidth, height: 20});
-  platforms.push({ x: width - 600 - mirroredPlatformWidth, y: 75, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+  platforms.push({x: 800, y: 150, width: 300, height: 20});
+  // Mirrored upper platform
 }
 
 
 function draw() {
   background(200);
   
-  // Handle character movement
+     // Handle character movement
   handleMovement();
   
   // Display platforms
-  fill(100);
+  fill(92, 64, 47);
   for (let platform of platforms) {
     rect(platform.x, platform.y, platform.width, platform.height);
   }
