@@ -1,11 +1,14 @@
 let character;
 let platforms = []; // Array for multiple platforms
 let characterImg; // Variable for the character image
-let upperPlatformWidth = 150; // Adjustable width for the upper platform
-let mirroredPlatformWidth = 150; // Adjustable width for the mirrored platform
+let upperPlatformWidth = 100; // Adjustable width for the upper platform
+let mirroredPlatformWidth = 100; // Adjustable width for the mirrored platform
 
-// Define keys state
-let keys = {};
+let levelWidth = 1200; // Width of the entire level
+let levelHeight = 600; // Height of the level
+
+// Define keys state (initialize as an empty object)
+let keys = {}; 
 
 function preload() {
   // Load the character image
@@ -13,7 +16,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(windowWidth, windowHeight); // Canvas is the visible window
   
   // Define the character
   character = {
@@ -28,16 +31,23 @@ function setup() {
     jumpForce: -17
   };
   
-  // Define platforms
-  platforms.push({ x: 0, y: 350, width: width, height: 20 }); // Bottom platform
-  platforms.push({ x: 350, y: 100, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
+  // Define platforms (inside smaller level)
+  platforms.push({ x: 0, y: 350, width: levelWidth, height: 20 }); // Bottom platform
+  platforms.push({ x: 200, y: 100, width: upperPlatformWidth, height: 20 }); // Upper platform
   
   // Add a new parallel platform on the opposite side with adjustable width
-  platforms.push({ x: width - 350 - mirroredPlatformWidth, y: 100, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+  platforms.push({ x: levelWidth - 200 - mirroredPlatformWidth, y: 100, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
 }
 
 function draw() {
   background(200);
+
+  // Calculate the camera position to follow the character in both x and y directions
+  let camX = constrain(character.x - width / 2, 0, levelWidth - width);  // Keep camera within level bounds horizontally
+  let camY = constrain(character.y - height / 2, 0, levelHeight - height); // Keep camera within level bounds vertically
+
+  // Apply camera translation to follow the character
+  translate(-camX, -camY);  // Translate the world to follow the player
   
   // Handle character movement
   handleMovement();
@@ -81,8 +91,8 @@ function updateCharacter() {
   }
 
   // Prevent character from falling off the bottom of the canvas
-  if (character.y > height) {
-    character.y = height;
+  if (character.y > levelHeight) {
+    character.y = levelHeight;
     character.velocityY = 0;
   }
 }
