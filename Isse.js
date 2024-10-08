@@ -1,22 +1,26 @@
 let character;
 let platforms = []; // Array for multiple platforms
-let characterImg; // Variable for the character image
-let upperPlatformWidth = 100; // Adjustable width for the upper platform
-let mirroredPlatformWidth = 100; // Adjustable width for the mirrored platform
-
-let levelWidth = 1200; // Width of the wentire level
-let levelHeight = 600; // Height of the level
-
-// Define keys state (initialize as an empty object)
-let keys = {}; 
+let characterImgs = []; // Array for the character images for animation
+let canFallThrough = false; // State to track if the player is allowed to fall through a platform
+let upperPlatformWidth = 150; // Adjustable width for the upper platform
+let mirroredPlatformWidth = 150;
+let animationFrame = 0; // To track the current frame for animation
+let animationSpeed = 5; // Speed of the animation
+let frameCounter = 0; // Counter to switch frames
+// Define keys state
+let keys = {};
+const miniScreenDiameter = 150; // Diameter of the mini screen (bubble)
+let bubbleOffset = 150; // Distance below the character where the bubble appears (adjustable)
 
 function preload() {
-  // Load the character image
-  characterImg = loadImage('Player1.png');
+  // Load the character images
+  characterImgs.push(loadImage('Player1.png')); // Frame 1
+  characterImgs.push(loadImage('Player2.png')); // Frame 2
+  characterImgs.push(loadImage('Player3.png')); // Frame 3
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight); // Canvas is the visible window
+  createCanvas(2000, 1000);
   
   // Define the character
   character = {
@@ -28,50 +32,69 @@ function setup() {
     gravity: 0.5,
     velocityY: 0,
     jumping: false,
-    jumpForce: -17
+    jumpForce: -15
   };
-  
-  // Define platforms (inside smaller level)
-  platforms.push({ x: 0, y: 350, width: levelWidth, height: 20 }); // Bottom platform
-  platforms.push({ x: 200, y: 100, width: upperPlatformWidth, height: 20 }); // Upper platform
-  
-  // Add a new parallel platform on the opposite side with adjustable width
-  platforms.push({ x: levelWidth - 200 - mirroredPlatformWidth, y: 100, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+    
+  platforms.push({ x: 100, y: 400, width: width, height: 150 }); // Bottom platform
+  platforms.push({ x: 350, y: 200, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
+  platforms.push({ x: width - 350 - mirroredPlatformWidth, y: 200, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+  platforms.push({ x: 600, y: 75, width: upperPlatformWidth, height: 20 });
+  platforms.push({ x: width - 600 - mirroredPlatformWidth, y: 75, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
 }
 
 function draw() {
   background(200);
-
-  // Calculate the camera position to follow the character in both x and y directions
-  let camX = constrain(character.x - width / 2, 0, levelWidth - width);  // Keep camera within level bounds horizontally
-  let camY = constrain(character.y - height / 2, 0, levelHeight - height); // Keep camera within level bounds vertically
-
-  // Apply camera translation to follow the character
-  translate(-camX, -camY);  // Translate the world to follow the player
   
   // Handle character movement
   handleMovement();
   
   // Display platforms
-  fill(100);
+  fill(92, 64, 47);
   for (let platform of platforms) {
     rect(platform.x, platform.y, platform.width, platform.height);
   }
   
-  // Update and display the character
+  // Update character
   updateCharacter();
+  
+  // Display the character with animation
   displayCharacter();
+
+  // Display the mini screen if the character is out of bounds
+  displayMiniScreen();
 }
 
 function handleMovement() {
+  let moving = false; // To check if the character is moving
+
   // Move left when 'A' key (key code 65) is pressed
   if (keys[65]) {
     character.x -= character.speed;
+    moving = true;
   }
   
   // Move right when 'D' key (key code 68) is pressed
   if (keys[68]) {
     character.x += character.speed;
+    moving = true;
+  }
+
+  // Fall through platform when 'S' key (key code 83) is pressed
+  if (keys[83]) {
+    canFallThrough = true;
+  } else {
+    canFallThrough = false;
+  }
+
+  // Update animation frame if moving
+  if (moving) {
+    frameCounter++;
+    if (frameCounter >= animationSpeed) {
+      animationFrame = (animationFrame + 1) % characterImgs.length; // Loop through frames
+      frameCounter = 0; // Reset counter
+    }
+  } else {
+    animationFrame = 0; // Reset to the first frame when not moving
   }
 }
 
@@ -82,8 +105,12 @@ function updateCharacter() {
 
   // Check collision with platforms
   for (let platform of platforms) {
-    if (character.y + character.height >= platform.y && character.y + character.height <= platform.y + platform.height && 
-        character.x + character.width > platform.x && character.x < platform.x + platform.width) {
+    if (!canFallThrough && // Only check for platform collision when 'S' key is not pressed
+        character.y + character.height >= platform.y && 
+        character.y + character.height <= platform.y + platform.height && 
+        character.x + character.width > platform.x && 
+        character.x < platform.x + platform.width) {
+      
       character.y = platform.y - character.height; // Place character on top of platform
       character.velocityY = 0; // Reset velocity
       character.jumping = false; // Allow jumping again
@@ -91,15 +118,31 @@ function updateCharacter() {
   }
 
   // Prevent character from falling off the bottom of the canvas
-  if (character.y > levelHeight) {
-    character.y = levelHeight;
+  if (character.y > height) {
+    character.y = height;
     character.velocityY = 0;
   }
 }
 
 function displayCharacter() {
-  // Display the character image instead of a rectangle
-  image(characterImg, character.x, character.y, character.width, character.height);
+  // Display the character image based on the current animation frame
+  image(characterImgs[animationFrame], character.x, character.y, character.width, character.height);
+}
+
+function displayMiniScreen() {
+  // Check if character is out of bounds (above the canvas)
+  let bubbleY = character.y + bubbleOffset; // Position of the bubble below the character
+  if (character.y < 0 || character.y > height) {
+    // Draw bubble background
+    fill(255, 255, 255, 150); // Semi-transparent white
+    // Position the bubble directly below the character
+    ellipse(character.x + character.width / 2, bubbleY, miniScreenDiameter, miniScreenDiameter); // Draw the bubble
+
+    // Draw character on mini screen (bubble)
+    let miniCharacterX = character.x + character.width / 2 - character.width / 4; // Center the character in the bubble
+    let miniCharacterY = bubbleY - character.height / 4; // Place the character within the bubble
+    image(characterImgs[animationFrame], miniCharacterX, miniCharacterY, character.width * 0.5, character.height * 0.5); // Scale down character image
+  }
 }
 
 function keyPressed() {
