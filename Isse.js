@@ -4,7 +4,7 @@ let characterImg; // Variable for the character image
 let upperPlatformWidth = 100; // Adjustable width for the upper platform
 let mirroredPlatformWidth = 100; // Adjustable width for the mirrored platform
 
-let levelWidth = 1200; // Width of the entire level
+let levelWidth = 1200; // Width of the wentire level
 let levelHeight = 600; // Height of the level
 
 // Define keys state (initialize as an empty object)
@@ -116,9 +116,4 @@ function keyPressed() {
 function keyReleased() {
   // Track keys released
   keys[keyCode] = false;
-}
-
-// For debugging: print character position and camera position to console
-function debug() {
-  console.log(`Character Position: (${character.x}, ${character.y}), Camera Position: (${camX}, ${camY})`);
 }
