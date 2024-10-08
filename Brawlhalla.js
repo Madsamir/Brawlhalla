@@ -1,6 +1,8 @@
 let character;
 let platforms = []; // Array for multiple platforms
 let characterImg; // Variable for the character image
+let upperPlatformWidth = 150; // Adjustable width for the upper platform
+let mirroredPlatformWidth = 150; // Adjustable width for the mirrored platform
 
 // Define keys state
 let keys = {};
@@ -23,12 +25,15 @@ function setup() {
     gravity: 0.5,
     velocityY: 0,
     jumping: false,
-    jumpForce: -20
+    jumpForce: -17
   };
   
   // Define platforms
   platforms.push({ x: 0, y: 350, width: width, height: 20 }); // Bottom platform
-  platforms.push({ x: 300, y: 100, width: 200, height: 20 }); // Upper platform
+  platforms.push({ x: 350, y: 100, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
+  
+  // Add a new parallel platform on the opposite side with adjustable width
+  platforms.push({ x: width - 350 - mirroredPlatformWidth, y: 100, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
 }
 
 function draw() {
