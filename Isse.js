@@ -117,3 +117,8 @@ function keyReleased() {
   // Track keys released
   keys[keyCode] = false;
 }
+
+// For debugging: print character position and camera position to console
+function debug() {
+  console.log(`Character Position: (${character.x}, ${character.y}), Camera Position: (${camX}, ${camY})`);
+}
