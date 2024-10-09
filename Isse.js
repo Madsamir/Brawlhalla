@@ -1,178 +1,221 @@
-let character;
+let characters = []; // Array for multiple characters
 let platforms = []; // Array for multiple platforms
-let rightFacingImgs = []; // Array for the right-facing images
-let leftFacingImgs = [];  // Array for the left-facing images
-let currentAnimationImgs = []; // Array for the currently active images
-let canFallThrough = false; // State to track if the player is allowed to fall through a platform
 let upperPlatformWidth = 150; // Adjustable width for the upper platform
 let mirroredPlatformWidth = 150;
-let animationFrame = 0; // To track the current frame for animation
-let animationSpeed = 5; // Speed of the animation
-let frameCounter = 0; // Counter to switch frames
-let lastDirection = 'right'; // Track the last direction of movement ('right' or 'left')
-
-// Define keys state
-let keys = {};
-const miniScreenDiameter = 150; // Diameter of the mini screen (bubble)
-let bubbleOffset = 150; // Distance below the character where the bubble appears (adjustable)
+let levelWidth = 1200; // Width of the entire level
+let levelHeight = 10; // Height of the level
+let keys = {}; // Define keys state
+let bubbleOffset = 50; // Distance of bubble from character
+let miniScreenDiameter = 100; // Size of the bubble
+let bubbleYOffset = 40; // Variblen som justere på boblens højde på y-aksen
+let playerRightImgs = []; // Array for the character moving right animation frames
+let playerLeftImgs = []; // Array for the character moving left animation frames
+let animationSpeed = 5; // Animation speed
+let frameCounter = 0; // To control frame rate for animation
 
 function preload() {
-  // Load the right-facing images
-  rightFacingImgs.push(loadImage('Player1.png')); // Frame 1
-  rightFacingImgs.push(loadImage('Player2.png')); // Frame 2
-  rightFacingImgs.push(loadImage('Player3.png')); // Frame 3
+  // Load right movement frames
+  playerRightImgs.push(loadImage('Player1.png'));
+  playerRightImgs.push(loadImage('Player2.png'));
+  playerRightImgs.push(loadImage('Player3.png'));
 
-  // Load the left-facing (mirrored) images
-  leftFacingImgs.push(loadImage('Mirror1.png')); // Frame 1 for left
-  leftFacingImgs.push(loadImage('Mirror2.png')); // Frame 2 for left
-  leftFacingImgs.push(loadImage('Mirror3.png')); // Frame 3 for left
-
-  // Set default to right-facing images
-  currentAnimationImgs = rightFacingImgs;
+  // Load left movement frames
+  playerLeftImgs.push(loadImage('Mirror1.png'));
+  playerLeftImgs.push(loadImage('Mirror2.png'));
+  playerLeftImgs.push(loadImage('Mirror3.png'));
 }
 
 function setup() {
-  createCanvas(2000, 1000);
-
-  // Define the character
-  character = {
-    x: 100,
+  createCanvas(2000, 900);
+  
+  // Define the first character
+  let character1 = {
+    x: 500,
     y: 300,
     width: 40,
     height: 40,
     speed: 5,
-    gravity: 0.5,
+    gravity: 0.6,
     velocityY: 0,
     jumping: false,
-    jumpForce: -15
+    jumpForce: -15,
+    canFallThrough: false, // Individual state for fall through
+    movingLeft: false, // Track if moving left
+    movingRight: false, // Track if moving right
+    lastDirection: "right", // Track the last movement direction
+    animationFrame: 0 // Track the current animation frame
   };
+  
+  // Define the second character with a different initial position
+  let character2 = {
+    x: 800,
+    y: 300,
+    width: 40,
+    height: 40,
+    speed: 5,
+    gravity: 0.6,
+    velocityY: 0,
+    jumping: false,
+    jumpForce: -15,
+    canFallThrough: false,
+    movingLeft: false,
+    movingRight: false,
+    lastDirection: "right",
+    animationFrame: 0
+  };
+  
+  characters.push(character1); // Add the first character to the array
+  characters.push(character2); // Add the second character to the array
 
-  platforms.push({ x: 100, y: 400, width: width, height: 150 }); // Bottom platform
-  platforms.push({ x: 350, y: 200, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
-  platforms.push({ x: width - 350 - mirroredPlatformWidth, y: 200, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
-  platforms.push({ x: 600, y: 75, width: upperPlatformWidth, height: 20 });
-  platforms.push({ x: width - 600 - mirroredPlatformWidth, y: 75, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
+  platforms.push({ x: 500, y: 450, width: 900, height: 150, color: [92,64,47]}); // Bottom platform
+  platforms.push({ x: 0, y: 700, width: 2000, height: 200, color: [173,216,230]}); // Bottom platform
+  platforms.push({ x: 650, y: 270, width: upperPlatformWidth, height: 20, color: [90,90,90] });
+  platforms.push({ x: width - 750 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20, color: [90,90,90] });
+  platforms.push({ x: 800, y: 150, width: 300, height: 20, color: [90,90,90] });
 }
 
 function draw() {
   background(200);
-
+  
   // Handle character movement
   handleMovement();
-
+  
   // Display platforms
-  fill(92, 64, 47);
   for (let platform of platforms) {
+    fill(platform.color);
     rect(platform.x, platform.y, platform.width, platform.height);
   }
-
-  // Update character
-  updateCharacter();
-
-  // Display the character with animation
-  displayCharacter();
-
-  // Display the mini screen if the character is out of bounds
-  displayMiniScreen();
+  
+  // Update and display both characters
+  for (let character of characters) {
+    updateCharacter(character);
+    displayCharacter(character);
+    displayMiniScreen(character); // Show bubble if character is out of bounds
+  }
 }
 
 function handleMovement() {
-  let moving = false; // To check if the character is moving
-
-  // Move left when 'A' key (key code 65) is pressed
-  if (keys[65]) {
-    character.x -= character.speed;
-    moving = true;
-    lastDirection = 'left'; // Update last direction
-    currentAnimationImgs = leftFacingImgs; // Use left-facing images
-  }
-
-  // Move right when 'D' key (key code 68) is pressed
-  if (keys[68]) {
-    character.x += character.speed;
-    moving = true;
-    lastDirection = 'right'; // Update last direction
-    currentAnimationImgs = rightFacingImgs; // Use right-facing images
-  }
-
-  // Fall through platform when 'S' key (key code 83) is pressed
-  if (keys[83]) {
-    canFallThrough = true;
-  } else {
-    canFallThrough = false;
-  }
-
-  // Update animation frame if moving
-  if (moving) {
-    frameCounter++;
-    if (frameCounter >= animationSpeed) {
-      animationFrame = (animationFrame + 1) % currentAnimationImgs.length; // Loop through frames
-      frameCounter = 0; // Reset counter
+  // Frame control for animation
+  frameCounter++;
+  if (frameCounter >= animationSpeed) {
+    for (let character of characters) {
+      if (character.movingLeft || character.movingRight) {
+        character.animationFrame = (character.animationFrame + 1) % playerRightImgs.length;
+      }
     }
-  } else {
-    animationFrame = 0; // Reset to the first frame when not moving
+    frameCounter = 0;
   }
+
+  // First character (WASD)
+  if (keys[65]) { // 'A' key for moving left
+    characters[0].x -= characters[0].speed;
+    characters[0].movingLeft = true;
+    characters[0].movingRight = false;
+    characters[0].lastDirection = "left";
+  } else if (keys[68]) { // 'D' key for moving right
+    characters[0].x += characters[0].speed;
+    characters[0].movingRight = true;
+    characters[0].movingLeft = false;
+    characters[0].lastDirection = "right";
+  } else {
+    characters[0].movingLeft = false;
+    characters[0].movingRight = false;
+  }
+
+  if (keys[87] && !characters[0].jumping) { // 'W' key for jumping
+    characters[0].velocityY += characters[0].jumpForce;
+    characters[0].jumping = true;
+  }
+
+  // Second character (Arrow keys)
+  if (keys[LEFT_ARROW]) { // Left arrow for moving left
+    characters[1].x -= characters[1].speed;
+    characters[1].movingLeft = true;
+    characters[1].movingRight = false;
+    characters[1].lastDirection = "left";
+  } else if (keys[RIGHT_ARROW]) { // Right arrow for moving right
+    characters[1].x += characters[1].speed;
+    characters[1].movingRight = true;
+    characters[1].movingLeft = false;
+    characters[1].lastDirection = "right";
+  } else {
+    characters[1].movingLeft = false;
+    characters[1].movingRight = false;
+  }
+
+  if (keys[UP_ARROW] && !characters[1].jumping) { // Jump
+    characters[1].velocityY += characters[1].jumpForce;
+    characters[1].jumping = true;
+  }
+
+  // Fall-through logic
+  characters[0].canFallThrough = keys[83]; // 'S' key
+  characters[1].canFallThrough = keys[DOWN_ARROW]; // Down arrow
 }
 
-function updateCharacter() {
-  // Gravity effect
+function updateCharacter(character) {
   character.velocityY += character.gravity;
   character.y += character.velocityY;
 
   // Check collision with platforms
   for (let platform of platforms) {
-    if (!canFallThrough && // Only check for platform collision when 'S' key is not pressed
-        character.y + character.height >= platform.y &&
-        character.y + character.height <= platform.y + platform.height &&
-        character.x + character.width > platform.x &&
+    if (!character.canFallThrough &&
+        character.y + character.height >= platform.y && 
+        character.y + character.height <= platform.y + platform.height && 
+        character.x + character.width > platform.x && 
         character.x < platform.x + platform.width) {
-
-      character.y = platform.y - character.height; // Place character on top of platform
-      character.velocityY = 0; // Reset velocity
-      character.jumping = false; // Allow jumping again
+      
+      character.y = platform.y - character.height;
+      character.velocityY = 0;
+      character.jumping = false;
     }
   }
 
-  // Prevent character from falling off the bottom of the canvas
+  // Prevent falling off the canvas
   if (character.y > height) {
     character.y = height;
     character.velocityY = 0;
   }
 }
 
-function displayCharacter() {
-  // Display the character image based on the current animation frame
-  image(currentAnimationImgs[animationFrame], character.x, character.y, character.width, character.height);
+function displayCharacter(character) {
+  let img;
+
+  if (character.movingLeft) {
+    img = playerLeftImgs[character.animationFrame]; // Use left movement frames
+  } else if (character.movingRight) {
+    img = playerRightImgs[character.animationFrame]; // Use right movement frames
+  } else {
+    // When the character stops, choose based on the last direction
+    if (character.lastDirection === "left") {
+      img = playerLeftImgs[0]; // Use 'Mirror1.png' when stopped after moving left
+    } else {
+      img = playerRightImgs[0]; // Use 'Player1.png' when stopped after moving right
+    }
+  }
+
+  image(img, character.x, character.y, character.width, character.height);
 }
 
-function displayMiniScreen() {
-  // Check if character is out of bounds (above the canvas)
-  let bubbleY = character.y + bubbleOffset; // Position of the bubble below the character
+function displayMiniScreen(character) {
+  let bubbleY = character.y + bubbleOffset + bubbleYOffset; // NEW: Adjust the bubble's Y offset based on the user setting
   if (character.y < 0 || character.y > height) {
-    // Draw bubble background
-    fill(255, 255, 255, 150); // Semi-transparent white
-    // Position the bubble directly below the character
-    ellipse(character.x + character.width / 2, bubbleY, miniScreenDiameter, miniScreenDiameter); // Draw the bubble
-
-    // Draw character on mini screen (bubble)
-    let miniCharacterX = character.x + character.width / 2 - character.width / 4; // Center the character in the bubble
-    let miniCharacterY = bubbleY - character.height / 4; // Place the character within the bubble
-    image(currentAnimationImgs[animationFrame], miniCharacterX, miniCharacterY, character.width * 0.5, character.height * 0.5); // Scale down character image
+    fill(255, 255, 255, 150);
+    ellipse(character.x + character.width / 2, bubbleY, miniScreenDiameter, miniScreenDiameter);
+    let miniCharacterX = character.x + character.width / 2 - character.width / 4;
+    let miniCharacterY = bubbleY - character.height / 4;
+    image(playerRightImgs[character.animationFrame], miniCharacterX, miniCharacterY, character.width * 0.5, character.height * 0.5);
   }
 }
 
 function keyPressed() {
-  // Track keys pressed
   keys[keyCode] = true;
 
-  // Jump when spacebar (key code 87) is pressed
-  if (keyCode === 87 && !character.jumping) {
-    character.velocityY += character.jumpForce;
-    character.jumping = true; // Prevent double jumping
+  if (keyCode === UP_ARROW || keyCode === DOWN_ARROW || keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
+    return false;
   }
 }
 
 function keyReleased() {
-  // Track keys released
   keys[keyCode] = false;
 }
