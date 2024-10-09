@@ -1,15 +1,11 @@
 let characters = []; // Array for multiple characters
 let platforms = []; // Array for multiple platforms
 let characterImg; // Variable for the character image
-let canFallThrough = false; // State to track if the player is allowed to fall through a platform
 let upperPlatformWidth = 150; // Adjustable width for the upper platform
 let mirroredPlatformWidth = 150;
 let levelWidth = 1200; // Width of the entire level
 let levelHeight = 10; // Height of the level
-
-// Define keys state
-let keys = {};
-
+let keys = {};// Define keys state
 // Variables for bubble display
 let bubbleOffset = 50; // Distance of bubble from character
 let miniScreenDiameter = 100; // Size of the bubble
@@ -23,7 +19,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(2000, 1000);
+  createCanvas(2000, 900);
   
   // Define the first character
   let character1 = {
@@ -35,7 +31,8 @@ function setup() {
     gravity: 0.6,
     velocityY: 0,
     jumping: false,
-    jumpForce: -15
+    jumpForce: -15,
+    canFallThrough: false // Individual state for fall through
   };
   
   // Define the second character with a different initial position
@@ -48,16 +45,18 @@ function setup() {
     gravity: 0.6,
     velocityY: 0,
     jumping: false,
-    jumpForce: -15
+    jumpForce: -15,
+    canFallThrough: false // Individual state for fall through
   };
   
   characters.push(character1); // Add the first character to the array
   characters.push(character2); // Add the second character to the array
 
-  platforms.push({ x: 500, y: 450, width: 900, height: 150 }); // Bottom platform
-  platforms.push({ x: 650, y: 270, width: upperPlatformWidth, height: 20 }); // Upper platform (adjustable width)
-  platforms.push({ x: width - 750 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20 }); // Mirrored upper platform
-  platforms.push({ x: 800, y: 150, width: 300, height: 20 }); // Another upper platform
+  platforms.push({ x: 500, y: 450, width: 900, height: 150, color: [92,64,47]}); // Bottom platform
+  platforms.push({ x: 0, y: 700, width: 2000, height: 200, color: [173,216,230]}); // bottom bottom platform
+  platforms.push({ x: 650, y: 270, width: upperPlatformWidth, height: 20,color: [90,90,90] }); // Upper platform (adjustable width)
+  platforms.push({ x: width - 750 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20,color: [90,90,90] }); // Mirrored upper platform
+  platforms.push({ x: 800, y: 150, width: 300, height: 20,color: [90,90,90] }); // Another upper platform
 }
 
 function draw() {
@@ -67,8 +66,12 @@ function draw() {
   handleMovement();
   
   // Display platforms
-  fill(92, 64, 47);
+  
+  
+  
   for (let platform of platforms) {
+    
+    fill(platform.color);
     rect(platform.x, platform.y, platform.width, platform.height);
   }
   
@@ -109,8 +112,11 @@ function handleMovement() {
     characters[1].jumping = true; // Prevent double jumping
   }
 
-  // Fall through platform when 'S' key (key code 83) is pressed
-  canFallThrough = keys[83]; // Fall through for the first character
+  // Fall through platform when 'S' key is pressed for the first character
+  characters[0].canFallThrough = keys[83]; // Fall through for the first character
+
+  // Fall through for second character if DOWN_ARROW is pressed
+  characters[1].canFallThrough = keys[DOWN_ARROW]; // Separate fall-through control for the second character
 }
 
 function updateCharacter(character) {
@@ -120,7 +126,7 @@ function updateCharacter(character) {
 
   // Check collision with platforms
   for (let platform of platforms) {
-    if (!canFallThrough && // Only check for platform collision when 'S' key is not pressed
+    if (!character.canFallThrough && // Only check for platform collision when not falling through
         character.y + character.height >= platform.y && 
         character.y + character.height <= platform.y + platform.height && 
         character.x + character.width > platform.x && 
@@ -162,6 +168,11 @@ function displayMiniScreen(character) {
 function keyPressed() {
   // Track keys pressed
   keys[keyCode] = true;
+
+  // Prevent default action (scrolling) when arrow keys are pressed
+  if (keyCode === UP_ARROW || keyCode === DOWN_ARROW || keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
+    return false;
+  }
 }
 
 function keyReleased() {
