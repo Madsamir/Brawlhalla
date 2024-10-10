@@ -29,7 +29,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(2000, 900);
+  createCanvas(windowWidth, windowHeight);
   
   // Create the start screen play button
   playButton = createButton('PLAY!');
@@ -82,7 +82,7 @@ function setup() {
   platforms.push({ x: 500, y: 450, width: 900, height: 150, color: [92,64,47]}); // Bottom platform
   platforms.push({ x: 0, y: 700, width: 2000, height: 200, color: [173,216,230]}); // Bottom platform
   platforms.push({ x: 650, y: 270, width: upperPlatformWidth, height: 20, color: [90,90,90] });
-  platforms.push({ x: width - 750 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20, color: [90,90,90] });
+  platforms.push({ x: width - 1150 - mirroredPlatformWidth, y: 270, width: mirroredPlatformWidth, height: 20, color: [90,90,90] });
   platforms.push({ x: 800, y: 150, width: 300, height: 20, color: [90,90,90] });
 }
 
