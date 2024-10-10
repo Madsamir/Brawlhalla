@@ -13,6 +13,9 @@ let playerLeftImgs = []; // Array for the character moving left animation frames
 let animationSpeed = 5; // Animation speed
 let frameCounter = 0; // To control frame rate for animation
 
+let gameStarted = false; // Variable to track if the game has started
+let playButton; // Button to start the game
+
 function preload() {
   // Load right movement frames
   playerRightImgs.push(loadImage('Player1.png'));
@@ -28,6 +31,15 @@ function preload() {
 function setup() {
   createCanvas(2000, 900);
   
+  // Create the start screen play button
+  playButton = createButton('PLAY!');
+  playButton.position(width / 2 - 50, height / 2);
+  playButton.size(100, 50);
+  playButton.style('font-size', '24px');
+  playButton.style('background-color', '#4CAF50');
+  playButton.style('color', 'white');
+  playButton.mousePressed(startGame);
+
   // Define the first character
   let character1 = {
     x: 500,
@@ -75,23 +87,41 @@ function setup() {
 }
 
 function draw() {
-  background(200);
-  
-  // Handle character movement
-  handleMovement();
-  
-  // Display platforms
-  for (let platform of platforms) {
-    fill(platform.color);
-    rect(platform.x, platform.y, platform.width, platform.height);
+  if (!gameStarted) {
+    displayStartScreen(); // Display start screen if game hasn't started
+  } else {
+    background(200);
+    
+    // Handle character movement
+    handleMovement();
+    
+    // Display platforms
+    for (let platform of platforms) {
+      fill(platform.color);
+      rect(platform.x, platform.y, platform.width, platform.height);
+    }
+    
+    // Update and display both characters
+    for (let character of characters) {
+      updateCharacter(character);
+      displayCharacter(character);
+      displayMiniScreen(character); // Show bubble if character is out of bounds
+    }
   }
-  
-  // Update and display both characters
-  for (let character of characters) {
-    updateCharacter(character);
-    displayCharacter(character);
-    displayMiniScreen(character); // Show bubble if character is out of bounds
-  }
+}
+
+function displayStartScreen() {
+  background(0); // Black background for start screen
+  textAlign(CENTER);
+  fill(255);
+  textSize(48);
+  text("Welcome to the Game!", width / 2, height / 2 - 100);
+}
+
+// Function to start the game
+function startGame() {
+  gameStarted = true;
+  playButton.hide(); // Hide the play button after starting the game
 }
 
 function handleMovement() {
